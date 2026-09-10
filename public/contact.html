@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>联系我们 | Yuka Send</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: oklch(1.000 0.000 0); color: oklch(0.120 0.005 60); margin: 0; line-height: 1.7; }
+.nav-link { padding: 6px 12px; border-radius: 8px; color: oklch(0.420 0.005 60); text-decoration: none; font-size: 14px; transition: color 0.15s, background-color 0.15s; }
+.nav-link:hover { color: oklch(0.120 0.005 60); background-color: oklch(0.970 0.005 60); }
+.footer-link { color: oklch(0.500 0.005 60); text-decoration: none; transition: color 0.15s; }
+.footer-link:hover { color: oklch(0.120 0.005 60); }
+.page-content { max-width: 680px; margin: 0 auto; padding: 48px 20px 80px; }
+.page-content h1 { font-size: 32px; font-weight: 600; margin-bottom: 8px; }
+.page-content .subtitle { font-size: 15px; color: oklch(0.500 0.005 60); margin-bottom: 40px; }
+.page-content h2 { font-size: 20px; font-weight: 600; margin-top: 36px; margin-bottom: 12px; }
+.page-content p { font-size: 15px; color: oklch(0.250 0.005 60); margin-bottom: 16px; }
+.page-content ul { margin: 12px 0 16px 20px; padding: 0; }
+.page-content li { font-size: 15px; color: oklch(0.250 0.005 60); margin-bottom: 8px; }
+.page-content a { color: oklch(0.550 0.124 60); text-decoration: none; }
+.page-content a:hover { text-decoration: underline; }
+.contact-card { background-color: oklch(0.970 0.005 60); border-radius: 12px; padding: 24px; margin-bottom: 16px; border: 1px solid oklch(0.920 0.005 60); }
+.contact-label { font-size: 13px; color: oklch(0.500 0.005 60); margin-bottom: 4px; }
+.contact-value { font-size: 15px; font-weight: 500; }
+</style>
+</head>
+<body>
+<nav class="w-full sticky top-0 z-40 backdrop-blur-md" style="background-color: oklch(1.000 0.000 0 / 0.85); border-bottom: 1px solid oklch(0.920 0.005 60);">
+  <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: oklch(0.550 0.124 60);"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M5 21h14a2 2 0 0 0 2-2v-4H3v4a2 2 0 0 0 2 2z"/></svg>
+      <span class="font-semibold text-[15px]" style="color: oklch(0.120 0.005 60);">Yuka Send</span>
+    </a>
+    <div class="flex items-center gap-1">
+      <a href="about.html" class="nav-link">关于</a>
+      <a href="privacy.html" class="nav-link">隐私政策</a>
+      <a href="contact.html" class="nav-link">联系我们</a>
+      <a href="https://anyuka.cn" class="nav-link" target="_blank" rel="noopener">博客</a>
+    </div>
+  </div>
+</nav>
+<div class="page-content">
+  <h1>联系我们</h1>
+  
+<p class="subtitle">任何建议、反馈或合作，都欢迎联系</p>
+<div class="contact-card"><div class="contact-label">邮箱</div><div class="contact-value"><a href="mailto:571273545@qq.com">571273545@qq.com</a></div><p style="font-size: 13px; color: oklch(0.500 0.005 60); margin: 8px 0 0;">通常 48 小时内回复</p></div>
+<div class="contact-card"><div class="contact-label">微信公众号</div><div class="contact-value">奇妙感</div><p style="font-size: 13px; color: oklch(0.500 0.005 60); margin: 8px 0 0;">每周一篇产品与 AI 的实践笔记</p></div>
+<div class="contact-card"><div class="contact-label">其他</div><p style="margin: 4px 0 0;">博客：<a href="https://anyuka.cn" target="_blank" rel="noopener">anyuka.cn</a></p><p style="margin: 2px 0 0;">GitHub：<a href="https://github.com/lin571273545" target="_blank" rel="noopener">github.com/lin571273545</a></p></div>
+<h2 style="margin-top: 40px;">常见问题</h2>
+<p><strong>房间码过期了？</strong></p><p>房间码 5 分钟未建立连接会自动销毁，双方需要重新生成。</p>
+<p><strong>P2P 连不上？</strong></p><p>多层 NAT 环境（公司 WiFi）下 P2P 成功率低，建议换到同 WiFi 或移动网络。</p>
+<p><strong>传输中浏览器关了？</strong></p><p>连接会断，需要双方重新建立。WebRTC 原生不支持断点续传。</p>
+
+</div>
+<footer class="border-t" style="border-color: oklch(0.920 0.005 60);">
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div class="flex items-center gap-2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: oklch(0.550 0.124 60);"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M5 21h14a2 2 0 0 0 2-2v-4H3v4a2 2 0 0 0 2 2z"/></svg>
+        <span class="font-semibold text-[14px]" style="color: oklch(0.120 0.005 60);">Yuka Send</span>
+      </div>
+      <div class="flex flex-wrap gap-x-6 gap-y-2 text-[13px]">
+        <a href="about.html" class="footer-link">关于</a>
+        <a href="privacy.html" class="footer-link">隐私政策</a>
+        <a href="contact.html" class="footer-link">联系我们</a>
+        <a href="https://anyuka.cn" class="footer-link" target="_blank" rel="noopener">奇妙感博客</a>
+        <a href="https://github.com/lin571273545" class="footer-link" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://qr.anyuka.cn" class="footer-link" target="_blank" rel="noopener">Yuka QR</a>
+      </div>
+    </div>
+    <div class="mt-6 pt-4 border-t text-center" style="border-color: oklch(0.920 0.005 60);">
+      <p style="font-size: 12px; color: oklch(0.600 0.005 60);">2026 Yuka Send · Made by 奇妙感</p>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

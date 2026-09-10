@@ -1,0 +1,32 @@
+﻿# 这个文件是给食光家庭的 docker-compose.yml 里加 Yuka Send 服务用的
+# 把下面 services.yuka-send 整个节点拷到你现有的 docker-compose.yml 的 services 里
+# networks 部分确保 nginx 和 yuka-send 在同一个网络
+
+# ===== 需要新增到 services 里的部分 =====
+
+  yuka-send:
+    build:
+      context: ../yuka-send
+      dockerfile: Dockerfile
+    container_name: yuka-send
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    # 和 nginx 在同一个自定义网络里，这样 Nginx 容器能用服务名反代
+    networks:
+      - app
+
+# ===== 如果你的 nginx 服务已经在 app 网络里，就不用改 networks =====
+# 如果 nginx 不在 app 网络，需要给 nginx 加一行：
+#   nginx:
+#     ...
+#     networks:
+#       - app

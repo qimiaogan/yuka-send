@@ -1,0 +1,800 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>免费点对点文件传输 | Yuka Send</title>
+<meta name="description" content="免费 P2P 文件传输工具，无需登录，数据不经过服务器。支持桌面和移动端浏览器。">
+<meta name="keywords" content="文件传输,P2P,WebRTC,免费文件发送,局域网传文件">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e8943a' stroke-width='2'><path d='M12 2v8m0 0l-3-3m3 3l3-3M5 22h14a2 2 0 0 0 2-2v-4H3v4a2 2 0 0 0 2 2z'/></svg>">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        bg: 'oklch(1.000 0.000 0)',
+        surface: 'oklch(0.970 0.005 60)',
+        primary: 'oklch(0.550 0.124 60)',
+        'primary-hover': 'oklch(0.510 0.124 60)',
+        ink: 'oklch(0.120 0.005 60)',
+        'ink-secondary': 'oklch(0.420 0.005 60)',
+        muted: 'oklch(0.600 0.005 60)',
+        border: 'oklch(0.900 0.005 60)',
+      },
+      fontFamily: {
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+      }
+    }
+  }
+}
+</script>
+<style>
+body { font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: oklch(1.000 0.000 0); color: oklch(0.120 0.005 60); margin: 0; }
+.nav-link { padding: 6px 12px; border-radius: 8px; color: oklch(0.420 0.005 60); text-decoration: none; font-size: 14px; transition: color 0.15s, background-color 0.15s; }
+.nav-link:hover { color: oklch(0.120 0.005 60); background-color: oklch(0.970 0.005 60); }
+.footer-link { color: oklch(0.500 0.005 60); text-decoration: none; transition: color 0.15s; }
+.footer-link:hover { color: oklch(0.120 0.005 60); }
+.btn-primary { background-color: oklch(0.550 0.124 60); color: white; padding: 12px 24px; border-radius: 12px; border: none; font-size: 15px; font-weight: 500; cursor: pointer; transition: background-color 0.15s; width: 100%; }
+.btn-primary:hover:not(:disabled) { background-color: oklch(0.510 0.124 60); }
+.btn-primary:disabled { background-color: oklch(0.850 0.005 60); color: oklch(0.600 0.005 60); cursor: not-allowed; }
+.btn-secondary { background-color: transparent; color: oklch(0.420 0.005 60); padding: 8px 16px; border-radius: 10px; border: 1px solid oklch(0.900 0.005 60); font-size: 14px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
+.btn-secondary:hover { color: oklch(0.120 0.005 60); border-color: oklch(0.700 0.005 60); }
+.drag-zone { border: 2px dashed oklch(0.850 0.005 60); border-radius: 16px; padding: 48px 24px; text-align: center; cursor: pointer; transition: border-color 0.15s, background-color 0.15s; }
+.drag-zone:hover, .drag-zone.dragging { border-color: oklch(0.550 0.124 60); background-color: oklch(0.980 0.010 60); }
+.drag-zone.dragging { border-style: solid; }
+.card { background-color: oklch(1.000 0.000 0); border: 1px solid oklch(0.920 0.005 60); border-radius: 20px; padding: 28px; }
+.input-field { width: 100%; padding: 12px 16px; border: 1px solid oklch(0.900 0.005 60); border-radius: 12px; font-size: 24px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 8px; text-align: center; color: oklch(0.120 0.005 60); outline: none; transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box; text-transform: uppercase; }
+.input-field:focus { border-color: oklch(0.550 0.124 60); box-shadow: 0 0 0 3px oklch(0.550 0.124 60 / 0.15); }
+.room-code-display { font-size: 56px; font-weight: 700; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 12px; text-align: center; color: oklch(0.120 0.005 60); user-select: all; }
+.progress-bar-bg { background-color: oklch(0.920 0.005 60); border-radius: 999px; height: 10px; overflow: hidden; }
+.progress-bar-fill { background-color: oklch(0.550 0.124 60); height: 100%; border-radius: 999px; transition: width 0.2s ease-out; width: 0%; }
+.status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+.status-waiting { background-color: oklch(0.950 0.020 60); color: oklch(0.450 0.050 60); }
+.status-connected { background-color: oklch(0.950 0.020 140); color: oklch(0.400 0.080 140); }
+.status-error { background-color: oklch(0.950 0.030 30); color: oklch(0.450 0.080 30); }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.file-info { display: flex; align-items: center; justify-content: space-between; padding: 16px; background-color: oklch(0.970 0.005 60); border-radius: 12px; margin-bottom: 16px; }
+.file-name { font-size: 14px; font-weight: 500; color: oklch(0.120 0.005 60); }
+.file-size { font-size: 13px; color: oklch(0.500 0.005 60); }
+.error-msg { color: oklch(0.500 0.100 30); font-size: 14px; padding: 12px 16px; background-color: oklch(0.970 0.020 30); border-radius: 12px; margin-top: 12px; }
+.mobile-hint { display: none; font-size: 13px; color: oklch(0.500 0.005 60); text-align: center; padding: 12px; background-color: oklch(0.970 0.005 60); border-radius: 12px; margin-bottom: 20px; }
+@media (max-width: 768px) {
+  .room-code-display { font-size: 40px; letter-spacing: 8px; }
+  .mobile-hint { display: block; }
+}
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<nav class="w-full sticky top-0 z-40 backdrop-blur-md" style="background-color: oklch(1.000 0.000 0 / 0.85); border-bottom: 1px solid oklch(0.920 0.005 60);">
+  <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2 no-underline">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: oklch(0.550 0.124 60);">
+        <path d="M12 3v12"/>
+        <path d="m8 11 4 4 4-4"/>
+        <path d="M5 21h14a2 2 0 0 0 2-2v-4H3v4a2 2 0 0 0 2 2z"/>
+      </svg>
+      <span class="font-semibold text-[15px]" style="color: oklch(0.120 0.005 60);">Yuka Send</span>
+    </a>
+    <div class="flex items-center gap-1">
+      <a href="about.html" class="nav-link">关于</a>
+      <a href="privacy.html" class="nav-link">隐私政策</a>
+      <a href="contact.html" class="nav-link">联系我们</a>
+      <a href="https://anyuka.cn" class="nav-link" target="_blank" rel="noopener">博客</a>
+    </div>
+  </div>
+</nav>
+
+<!-- 移动端提示 -->
+<div class="max-w-6xl mx-auto px-4 pt-4">
+  <div class="mobile-hint">建议在桌面浏览器使用，移动端功能有限</div>
+</div>
+
+<!-- 主内容 -->
+<main class="max-w-6xl mx-auto px-4 py-8">
+
+  <div class="text-center mb-10">
+    <h1 class="text-[28px] md:text-[36px] font-semibold tracking-tight">免费点对点文件传输</h1>
+    <p class="mt-2 text-[15px]" style="color: oklch(0.500 0.005 60);">无需登录 · 数据不经过服务器 · 桌面端无文件大小限制</p>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-6 md:gap-8">
+
+    <!-- 左侧：发送文件 -->
+    <div class="card">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-[18px] font-semibold m-0">发送文件</h2>
+        <span id="send-status" class="status-badge status-waiting"><span class="status-dot"></span>等待中</span>
+      </div>
+
+      <!-- 空状态：拖文件区 -->
+      <div id="drag-zone" class="drag-zone">
+        <input type="file" id="file-input" style="display: none;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: oklch(0.800 0.005 60); margin-bottom: 16px;">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <p style="color: oklch(0.500 0.005 60); font-size: 15px; margin: 0;">拖拽文件到这里</p>
+        <p style="color: oklch(0.600 0.005 60); font-size: 13px; margin: 6px 0 0;">或点击选择文件</p>
+      </div>
+
+      <!-- 文件已选状态 -->
+      <div id="send-file-selected" style="display: none;">
+        <div class="file-info">
+          <div>
+            <div class="file-name" id="selected-file-name">--</div>
+            <div class="file-size" id="selected-file-size">--</div>
+          </div>
+          <button id="clear-file" class="btn-secondary" style="width: auto;">取消</button>
+        </div>
+        <button id="create-code-btn" class="btn-primary">生成房间码</button>
+      </div>
+
+      <!-- 已生成房间码状态 -->
+      <div id="send-code-created" style="display: none;">
+        <p style="font-size: 13px; color: oklch(0.500 0.005 60); text-align: center; margin-bottom: 12px;">你的房间码</p>
+        <div id="room-code-display" class="room-code-display mb-4">------</div>
+        <p style="font-size: 13px; color: oklch(0.500 0.005 60); text-align: center; margin-bottom: 16px;">等待对方输入房间码... 5 分钟内有效</p>
+        <button id="cancel-send" class="btn-secondary" style="width: 100%;">取消</button>
+      </div>
+
+      <!-- 传输进度状态 -->
+      <div id="send-progress" style="display: none;">
+        <p style="font-size: 14px; font-weight: 500; color: oklch(0.120 0.005 60); margin-bottom: 4px;">发送中</p>
+        <div class="file-info" style="margin-bottom: 12px;">
+          <div>
+            <div class="file-name" id="progress-file-name">--</div>
+            <div class="file-size" id="progress-details">--</div>
+          </div>
+        </div>
+        <div class="progress-bar-bg" style="margin-bottom: 12px;"><div id="send-progress-fill" class="progress-bar-fill"></div></div>
+        <div class="flex justify-between text-[13px]" style="color: oklch(0.500 0.005 60);">
+          <span id="send-percent">0%</span>
+          <span id="send-speed">--</span>
+        </div>
+        <button id="cancel-transfer" class="btn-secondary" style="width: 100%; margin-top: 16px;">取消传输</button>
+      </div>
+
+      <!-- 完成状态 -->
+      <div id="send-done" style="display: none; text-align: center;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: oklch(0.550 0.124 60); margin-bottom: 12px; margin-left: auto; margin-right: auto;">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <p style="font-size: 15px; font-weight: 500; margin-bottom: 16px;">发送完成</p>
+        <button id="reset-send" class="btn-primary">发送另一个文件</button>
+      </div>
+
+      <!-- 错误状态 -->
+      <div id="send-error" style="display: none;">
+        <div id="send-error-msg" class="error-msg">--</div>
+        <button id="reset-send-error" class="btn-primary" style="margin-top: 16px;">重试</button>
+      </div>
+    </div>
+
+    <!-- 右侧：接收文件 -->
+    <div class="card">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-[18px] font-semibold m-0">接收文件</h2>
+        <span id="recv-status" class="status-badge status-waiting"><span class="status-dot"></span>等待中</span>
+      </div>
+
+      <!-- 空状态 -->
+      <div id="recv-empty">
+        <input type="text" id="room-code-input" class="input-field" placeholder="------" maxlength="6" autocomplete="off" style="text-transform: uppercase;">
+        <p style="font-size: 13px; color: oklch(0.500 0.005 60); text-align: center; margin: 16px 0;">输入 6 位房间码</p>
+        <button id="connect-btn" class="btn-primary">连接</button>
+      </div>
+
+      <!-- 连接中状态 -->
+      <div id="recv-connecting" style="display: none; text-align: center;">
+        <div class="status-badge status-waiting" style="margin-bottom: 16px;"><span class="status-dot"></span>正在连接...</div>
+        <p style="font-size: 14px; color: oklch(0.500 0.005 60);">正在尝试建立 P2P 连接</p>
+      </div>
+
+      <!-- 等待发送方选中文件 -->
+      <div id="recv-waiting-file" style="display: none; text-align: center;">
+        <div class="status-badge status-connected" style="margin-bottom: 16px;"><span class="status-dot"></span>已连接</div>
+        <p style="font-size: 14px; color: oklch(0.500 0.005 60);">等待对方发送文件...</p>
+        <button id="leave-room" class="btn-secondary" style="width: 100%; margin-top: 20px;">离开房间</button>
+      </div>
+
+      <!-- 接收进度 -->
+      <div id="recv-progress" style="display: none;">
+        <p style="font-size: 14px; font-weight: 500; color: oklch(0.120 0.005 60); margin-bottom: 4px;">接收中</p>
+        <div class="file-info" style="margin-bottom: 12px;">
+          <div>
+            <div class="file-name" id="recv-file-name">--</div>
+            <div class="file-size" id="recv-file-size">--</div>
+          </div>
+        </div>
+        <div class="progress-bar-bg" style="margin-bottom: 12px;"><div id="recv-progress-fill" class="progress-bar-fill"></div></div>
+        <div class="flex justify-between text-[13px]" style="color: oklch(0.500 0.005 60);">
+          <span id="recv-percent">0%</span>
+          <span id="recv-speed">--</span>
+        </div>
+        <button id="cancel-recv" class="btn-secondary" style="width: 100%; margin-top: 16px;">取消接收</button>
+      </div>
+
+      <!-- 接收完成 -->
+      <div id="recv-done" style="display: none; text-align: center;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: oklch(0.550 0.124 60); margin-bottom: 12px; margin-left: auto; margin-right: auto;">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <p style="font-size: 15px; font-weight: 500; margin-bottom: 4px;">接收完成</p>
+        <p style="font-size: 13px; color: oklch(0.500 0.005 60); margin-bottom: 16px;" id="recv-done-info">--</p>
+        <button id="save-file" class="btn-primary">保存文件</button>
+        <button id="reset-recv" class="btn-secondary" style="width: 100%; margin-top: 12px;">接收另一个文件</button>
+      </div>
+
+      <!-- 错误 -->
+      <div id="recv-error" style="display: none;">
+        <div id="recv-error-msg" class="error-msg">--</div>
+        <button id="reset-recv-error" class="btn-primary" style="margin-top: 16px;">重试</button>
+      </div>
+
+      <p class="text-center mt-6 text-[12px]" style="color: oklch(0.600 0.005 60);">提示：当前网络无法 P2P 连接时，请切换到同 WiFi 或移动网络重试</p>
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="border-t mt-16" style="border-color: oklch(0.920 0.005 60);">
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: oklch(0.550 0.124 60);">
+            <path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M5 21h14a2 2 0 0 0 2-2v-4H3v4a2 2 0 0 0 2 2z"/>
+          </svg>
+          <span class="font-semibold text-[14px]" style="color: oklch(0.120 0.005 60);">Yuka Send</span>
+        </div>
+        <p style="font-size: 12px; color: oklch(0.500 0.005 60);">免费 P2P 文件传输 · 数据不经过服务器 · 纯前端 WebRTC</p>
+      </div>
+      <div class="flex flex-wrap gap-x-6 gap-y-2 text-[13px]">
+        <a href="about.html" class="footer-link">关于</a>
+        <a href="privacy.html" class="footer-link">隐私政策</a>
+        <a href="contact.html" class="footer-link">联系我们</a>
+        <a href="https://anyuka.cn" class="footer-link" target="_blank" rel="noopener">奇妙感博客</a>
+        <a href="https://github.com/lin571273545" class="footer-link" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://qr.anyuka.cn" class="footer-link" target="_blank" rel="noopener">Yuka QR</a>
+      </div>
+    </div>
+    <div class="mt-6 pt-4 border-t flex flex-col md:flex-row justify-between items-center gap-2" style="border-color: oklch(0.920 0.005 60);">
+      <p style="font-size: 12px; color: oklch(0.600 0.005 60);">2026 Yuka Send · Made by 奇妙感</p>
+      <p style="font-size: 12px; color: oklch(0.600 0.005 60);">基于 WebRTC · PeerJS · Node.js</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ========= 配置 =========
+// 本地开发 ws://localhost:3000，生产环境改为 wss://send.anyuka.cn 的 ws 端点
+const SIGNALING_URL = location.hostname === 'localhost' ? 'ws://localhost:3000' : (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + ':3000';
+
+// ========= 状态 =========
+const state = {
+  ws: null,
+  role: null,        // 'host' | 'guest'
+  code: null,
+  peer: null,
+  dc: null,          // DataChannel
+  file: null,
+  chunks: [],
+  receivedChunks: [],
+  totalChunks: 0,
+  receivedSize: 0,
+  startTime: 0,
+  bytesThisTick: 0,
+  lastSpeedCheck: 0,
+  speed: 0,
+  receivingBlob: null,
+};
+
+const CHUNK_SIZE = 64 * 1024; // 64KB per chunk for reliable mode
+
+// ========= DOM =========
+const $ = id => document.getElementById(id);
+const dragZone = $('drag-zone');
+const fileInput = $('file-input');
+
+// ========= 工具 =========
+function fmtSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  if (bytes < 1024*1024*1024) return (bytes/1024/1024).toFixed(1) + ' MB';
+  return (bytes/1024/1024/1024).toFixed(2) + ' GB';
+}
+function fmtSpeed(bytesPerSec) {
+  if (bytesPerSec < 1024) return bytesPerSec + ' B/s';
+  if (bytesPerSec < 1024*1024) return (bytesPerSec/1024).toFixed(1) + ' KB/s';
+  return (bytesPerSec/1024/1024).toFixed(1) + ' MB/s';
+}
+function setStatus(elId, text, cls) {
+  const el = $(elId);
+  el.className = 'status-badge ' + cls;
+  el.innerHTML = '<span class="status-dot"></span>' + text;
+}
+function showOnly(id) {
+  ['drag-zone', 'send-file-selected', 'send-code-created', 'send-progress', 'send-done', 'send-error'].forEach(s => {
+    const el = $(s);
+    if (el) el.style.display = s === id ? '' : 'none';
+  });
+}
+function showOnlyRecv(id) {
+  ['recv-empty', 'recv-connecting', 'recv-waiting-file', 'recv-progress', 'recv-done', 'recv-error'].forEach(s => {
+    const el = $(s);
+    if (el) el.style.display = s === id ? '' : 'none';
+  });
+}
+
+// ========= WS 信令 =========
+function connectWS() {
+  state.ws = new WebSocket(SIGNALING_URL);
+  state.ws.onopen = () => console.log('[ws] connected');
+  state.ws.onclose = () => {
+    console.log('[ws] closed');
+    // 3 秒后重连（如果还在等待中）
+    setTimeout(() => { if (state.role) connectWS(); }, 3000);
+  };
+  state.ws.onerror = (e) => console.error('[ws] error', e);
+  state.ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    console.log('[ws] <-', msg.type);
+    handleSignal(msg);
+  };
+}
+
+function handleSignal(msg) {
+  switch (msg.type) {
+    case 'CREATED':
+      state.code = msg.code;
+      $('room-code-display').textContent = msg.code;
+      showOnly('send-code-created');
+      setStatus('send-status', '等待对方', 'status-waiting');
+      break;
+    case 'JOINED':
+      // guest 确认自己加入了
+      break;
+    case 'PEER_JOINED':
+      // host 收到：客人来了，建立 RTCPeerConnection
+      setStatus('send-status', '已连接', 'status-connected');
+      createPeerAsHost();
+      break;
+    case 'SDP':
+      handleSDP(msg);
+      break;
+    case 'ICE':
+      handleICE(msg);
+      break;
+    case 'PEER_LEFT':
+    case 'BYE':
+      cleanupPeer();
+      if (state.role === 'host') {
+        setStatus('send-status', '对方已离开', 'status-error');
+        showOnly('send-error');
+        $('send-error-msg').textContent = '对方已离开房间';
+      } else {
+        setStatus('recv-status', '对方已离开', 'status-error');
+        showOnlyRecv('recv-error');
+        $('recv-error-msg').textContent = '对方已离开房间';
+      }
+      break;
+    case 'ERROR':
+      showOnlyRecv('recv-error');
+      $('recv-error-msg').textContent = msg.reason;
+      setStatus('recv-status', '错误', 'status-error');
+      break;
+  }
+}
+
+function sendWS(obj) {
+  if (state.ws && state.ws.readyState === state.ws.OPEN) {
+    state.ws.send(JSON.stringify(obj));
+  }
+}
+
+// ========= WebRTC Peer =========
+function createPeerAsHost() {
+  state.peer = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] });
+  setupPeer();
+  state.dc = state.peer.createDataChannel('file-transfer', { ordered: true });
+  setupDataChannel();
+  state.peer.createOffer().then(offer => state.peer.setLocalDescription(offer)).then(() => {
+    sendWS({ type: 'SDP', sdp: state.peer.localDescription });
+  }).catch(console.error);
+}
+
+function createPeerAsGuest() {
+  state.peer = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] });
+  setupPeer();
+  state.peer.ondatachannel = (e) => {
+    state.dc = e.channel;
+    setupDataChannel();
+  };
+}
+
+function setupPeer() {
+  state.peer.onicecandidate = (e) => {
+    if (e.candidate) sendWS({ type: 'ICE', candidate: e.candidate });
+  };
+  state.peer.onconnectionstatechange = () => {
+    console.log('[peer] state:', state.peer.connectionState);
+    if (state.peer.connectionState === 'failed') {
+      showErrorBoth('P2P 连接失败，请检查网络或尝试同 WiFi');
+    }
+  };
+}
+
+function handleSDP(msg) {
+  if (msg.sdp.type === 'offer') {
+    state.peer.setRemoteDescription(msg.sdp).then(() => {
+      return state.peer.createAnswer();
+    }).then(answer => state.peer.setLocalDescription(answer)).then(() => {
+      sendWS({ type: 'SDP', sdp: state.peer.localDescription });
+      setStatus('recv-status', '已连接', 'status-connected');
+      showOnlyRecv('recv-waiting-file');
+    }).catch(console.error);
+  } else if (msg.sdp.type === 'answer') {
+    state.peer.setRemoteDescription(msg.sdp).catch(console.error);
+  }
+}
+
+function handleICE(msg) {
+  state.peer.addIceCandidate(msg.candidate).catch(e => { /* 某些 candidate 可能无效，忽略 */ });
+}
+
+function setupDataChannel() {
+  state.dc.binaryType = 'arraybuffer';
+  state.dc.onopen = () => {
+    console.log('[dc] open');
+    if (state.role === 'guest') {
+      setStatus('recv-status', '已连接', 'status-connected');
+      showOnlyRecv('recv-waiting-file');
+    }
+  };
+  state.dc.onclose = () => {
+    console.log('[dc] close');
+    // 如果还在传输中就断了
+    if (state.receivingBlob === null && state.receivedSize > 0 && state.receivedSize < state.totalChunks * CHUNK_SIZE) {
+      // 传完才算 done
+    }
+  };
+  state.dc.onmessage = (e) => {
+    const data = e.data;
+    // 控制消息（JSON）或文件块（ArrayBuffer）
+    if (typeof data === 'string') {
+      const cmd = JSON.parse(data);
+      console.log('[dc] cmd:', cmd.type);
+      handleControlMessage(cmd);
+    } else {
+      state.receivedChunks.push(data);
+      state.receivedSize += data.byteLength;
+      state.bytesThisTick += data.byteLength;
+      updateRecvProgress();
+    }
+  };
+}
+
+function handleControlMessage(cmd) {
+  switch (cmd.type) {
+    case 'FILE_META':
+      // host 告诉 guest 文件信息
+      state.totalChunks = Math.ceil(cmd.size / CHUNK_SIZE);
+      state.receivedChunks = [];
+      state.receivedSize = 0;
+      state.bytesThisTick = 0;
+      state.startTime = performance.now();
+      state.lastSpeedCheck = state.startTime;
+      $('recv-file-name').textContent = cmd.name;
+      state.receivingFileName = cmd.name;
+      $('recv-file-size').textContent = fmtSize(cmd.size);
+      showOnlyRecv('recv-progress');
+      setStatus('recv-status', '接收中', 'status-connected');
+      break;
+    case 'FILE_DONE':
+      // host 通知 guest 文件发完了
+      assembleFile(cmd.name, cmd.size);
+      break;
+  }
+}
+
+function cleanupPeer() {
+  if (state.dc) { try { state.dc.close(); } catch {} state.dc = null; }
+  if (state.peer) { try { state.peer.close(); } catch {} state.peer = null; }
+}
+
+function showErrorBoth(msg) {
+  if (state.role === 'host') {
+    setStatus('send-status', '错误', 'status-error');
+    showOnly('send-error');
+    $('send-error-msg').textContent = msg;
+  } else {
+    setStatus('recv-status', '错误', 'status-error');
+    showOnlyRecv('recv-error');
+    $('recv-error-msg').textContent = msg;
+  }
+}
+
+// ========= 发送逻辑 =========
+dragZone.addEventListener('click', () => fileInput.click());
+dragZone.addEventListener('dragover', (e) => { e.preventDefault(); dragZone.classList.add('dragging'); });
+dragZone.addEventListener('dragleave', () => dragZone.classList.remove('dragging'));
+dragZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dragZone.classList.remove('dragging');
+  if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', (e) => { if (e.target.files.length > 0) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  state.file = file;
+  $('selected-file-name').textContent = file.name;
+  $('selected-file-size').textContent = fmtSize(file.size);
+  showOnly('send-file-selected');
+}
+
+$('clear-file').onclick = () => { state.file = null; fileInput.value = ''; showOnly('drag-zone'); };
+
+$('create-code-btn').onclick = () => {
+  state.role = 'host';
+  connectWS();
+  // 等 ws open 后发 CREATE
+  state.ws.onopen = () => {
+    console.log('[ws] connected, sending CREATE');
+    state.ws.send(JSON.stringify({ type: 'CREATE' }));
+  };
+};
+
+$('cancel-send').onclick = () => {
+  sendWS({ type: 'BYE' });
+  cleanupPeer();
+  if (state.ws) state.ws.close();
+  state.role = null; state.code = null;
+  state.file = null; state.chunks = [];
+  fileInput.value = '';
+  setStatus('send-status', '等待中', 'status-waiting');
+  showOnly('drag-zone');
+};
+
+$('reset-send').onclick = $('reset-send-error').onclick = () => {
+  state.role = null; state.code = null; state.file = null; state.chunks = [];
+  fileInput.value = '';
+  setStatus('send-status', '等待中', 'status-waiting');
+  showOnly('drag-zone');
+  cleanupPeer();
+  if (state.ws) { state.ws.close(); state.ws = null; }
+};
+
+$('cancel-transfer').onclick = () => {
+  sendWS({ type: 'BYE' });
+  cleanupPeer();
+  if (state.ws) state.ws.close();
+  state.role = null; state.code = null; state.file = null; state.chunks = [];
+  fileInput.value = '';
+  setStatus('send-status', '等待中', 'status-waiting');
+  showOnly('drag-zone');
+};
+
+$('reset-recv').onclick = $('reset-recv-error').onclick = () => {
+  state.role = null; state.code = null;
+  state.receivedChunks = []; state.receivedSize = 0; state.receivingBlob = null;
+  cleanupPeer();
+  if (state.ws) { state.ws.close(); state.ws = null; }
+  $('room-code-input').value = '';
+  setStatus('recv-status', '等待中', 'status-waiting');
+  showOnlyRecv('recv-empty');
+};
+
+// ========= 接收逻辑 =========
+$('connect-btn').onclick = () => {
+  const code = $('room-code-input').value.trim().toUpperCase();
+  if (!code || code.length !== 6) return;
+  state.role = 'guest';
+  state.code = code;
+  showOnlyRecv('recv-connecting');
+  setStatus('recv-status', '连接中', 'status-waiting');
+  connectWS();
+  state.ws.onopen = () => {
+    state.ws.send(JSON.stringify({ type: 'JOIN', code }));
+    createPeerAsGuest();
+  };
+};
+
+$('leave-room').onclick = () => {
+  sendWS({ type: 'BYE' });
+  cleanupPeer();
+  if (state.ws) state.ws.close();
+  state.role = null; state.code = null;
+  $('room-code-input').value = '';
+  setStatus('recv-status', '等待中', 'status-waiting');
+  showOnlyRecv('recv-empty');
+};
+
+$('cancel-recv').onclick = () => {
+  sendWS({ type: 'BYE' });
+  cleanupPeer();
+  if (state.ws) state.ws.close();
+  state.role = null; state.code = null; state.receivedChunks = []; state.receivedSize = 0;
+  $('room-code-input').value = '';
+  setStatus('recv-status', '等待中', 'status-waiting');
+  showOnlyRecv('recv-empty');
+};
+
+$('save-file').onclick = () => {
+  if (state.receivingBlob) {
+    const url = URL.createObjectURL(state.receivingBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = state.receivingFileName || (state.file ? state.file.name : 'download');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+};
+
+// ========= 发送文件流程 =========
+function startSending() {
+  if (!state.dc || state.dc.readyState !== 'open') {
+    setTimeout(startSending, 100);
+    return;
+  }
+  const file = state.file;
+  const total = Math.ceil(file.size / CHUNK_SIZE);
+  state.chunks = [];
+  state.totalChunks = total;
+  state.receivedSize = 0; // 使用相同变量名追踪发送进度（已发送的 chunk 数）
+  state.startTime = performance.now();
+  state.lastSpeedCheck = state.startTime;
+  state.bytesThisTick = 0;
+
+  // 先发 meta
+  state.dc.send(JSON.stringify({ type: 'FILE_META', name: file.name, size: file.size, totalChunks: total }));
+
+  // 切分并发送
+  let offset = 0;
+  let sentCount = 0;
+  const reader = new FileReader();
+
+  function sendNextChunk() {
+    if (offset >= file.size) {
+      // 发完了，通知对方
+      state.dc.send(JSON.stringify({ type: 'FILE_DONE', name: file.name, size: file.size }));
+      showOnly('send-done');
+      setStatus('send-status', '发送完成', 'status-connected');
+      return;
+    }
+    const end = Math.min(offset + CHUNK_SIZE, file.size);
+    const blob = file.slice(offset, end);
+    reader.readAsArrayBuffer(blob);
+  }
+
+  reader.onload = () => {
+    const buf = reader.result;
+    try {
+      state.dc.send(buf);
+      state.receivedSize += buf.byteLength;
+      state.bytesThisTick += buf.byteLength;
+      sentCount++;
+      updateSendProgress(file.size);
+      offset += CHUNK_SIZE;
+      // 微任务继续，避免阻塞
+      setTimeout(sendNextChunk, 0);
+    } catch (e) {
+      console.error('send failed:', e);
+      showErrorBoth('传输中断，请重试');
+    }
+  };
+
+  showOnly('send-progress');
+  $('progress-file-name').textContent = file.name;
+  setStatus('send-status', '发送中', 'status-connected');
+  sendNextChunk();
+}
+
+// 当 host 的 dc open 且 guest 也 connected，启动发送
+function tryStartSend() {
+  if (state.role === 'host' && state.dc && state.dc.readyState === 'open' && state.file) {
+    startSending();
+  }
+}
+// 监听 dc open
+const _origDCOpen = setupDataChannel;
+
+// ========= 进度更新 =========
+function updateSendProgress(totalSize) {
+  const pct = Math.min(100, (state.receivedSize / totalSize) * 100);
+  $('send-progress-fill').style.width = pct + '%';
+  $('send-percent').textContent = pct.toFixed(1) + '%';
+  $('progress-details').textContent = fmtSize(state.receivedSize) + ' / ' + fmtSize(totalSize);
+  updateSpeed('send');
+}
+
+function updateRecvProgress() {
+  const expected = state.totalChunks * CHUNK_SIZE;
+  const pct = Math.min(100, (state.receivedSize / expected) * 100);
+  $('recv-progress-fill').style.width = pct + '%';
+  $('recv-percent').textContent = pct.toFixed(1) + '%';
+  $('recv-speed').textContent = fmtSpeed(state.speed);
+  updateSpeed('recv');
+}
+
+function updateSpeed(which) {
+  const now = performance.now();
+  if (now - state.lastSpeedCheck > 500) {
+    state.speed = state.bytesThisTick / ((now - state.lastSpeedCheck) / 1000);
+    state.bytesThisTick = 0;
+    state.lastSpeedCheck = now;
+    const targetId = which === 'send' ? 'send-speed' : 'recv-speed';
+    const el = $(targetId);
+    if (el) el.textContent = fmtSpeed(state.speed);
+  }
+  requestAnimationFrame(() => updateSpeed(which));
+}
+
+function assembleFile(name, size) {
+  showOnlyRecv('recv-done');
+  setStatus('recv-status', '接收完成', 'status-connected');
+  const blob = new Blob(state.receivedChunks, { type: 'application/octet-stream' });
+  state.receivingBlob = blob;
+  $('recv-done-info').textContent = name + ' · ' + fmtSize(size);
+}
+
+// ========= 监听 DataChannel open 后发送 =========
+// 在 setupDataChannel 之后，如果是 host 且有文件，开始发送
+const _dcReady = new MutationObserver(() => {});
+
+// 重写 setupDataChannel 的 onopen 行为
+const origSetupDataChannel = setupDataChannel;
+// 我们已经在 setupDataChannel 里设了 dc.onopen，让 host 的 dc open 后自动 startSending：
+// 在 dc.onopen 的末尾加 tryStartSend
+
+// 直接覆盖
+Object.assign(window, { tryStartSend });
+
+// 让 dc.onopen 调用 tryStartSend
+// 修改 setupDataChannel 中 dc.onopen 的最后，加上 tryStartSend()
+// 因为 JS 闭包，我们在 dc.onopen 里直接调：
+// 但我们的 setupDataChannel 函数已经定义好了... 直接用事件委托：
+
+// 最简单的方式：在 createPeerAsHost 之后，轮询 dc ready
+const origCreatePeerAsHost = createPeerAsHost;
+// createPeerAsHost 里 setupDataChannel 设了 onopen，加一行 tryStartSend
+
+// 用猴子补丁
+const _origSetupDC = setupDataChannel.toString();
+// 简单方案：在 PEER_JOINED 事件后 1 秒启动（dc 应该已 open）
+
+// ========= 最后：在 PEER_JOINED 里启动发送 =========
+// 修改 handleSignal 的 PEER_JOINED 分支
+// 因为 handleSignal 在前面，我们用 setInterval 等待 dc open
+const _origHandleSignal = handleSignal;
+
+// ========= 完成 host dc open 后自动发送 =========
+// 在 createPeerAsHost 里 setupDataChannel 的 onopen 调用
+// 直接修改 createPeerAsHost 里 setupDataChannel() 调用后的行为
+// 用 hook：
+let _realSetupDataChannel = setupDataChannel;
+setupDataChannel = function() {
+  _realSetupDataChannel();
+  const origOnOpen = state.dc.onopen;
+  state.dc.onopen = function() {
+    if (origOnOpen) origOnOpen();
+    if (state.role === 'host' && state.file) {
+      startSending();
+    }
+  };
+};
+
+console.log('Yuka Send frontend loaded');
+</script>
+</body>
+</html>
+

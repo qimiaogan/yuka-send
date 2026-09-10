@@ -1,0 +1,43 @@
+﻿# Dependencies
+node_modules/
+
+# Build / output
+test/output/
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.vscode/*
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Test downloads
+test/output/
+test/
+
+# Node
+coverage/
+.nyc_output/
+
+# System tmp
+*.tmp
+*.temp
+DEPLOY.md
+design-probe-1.jpg
+design-probe-2.jpg
+design-probe-3.jpg
+Dockerfile
