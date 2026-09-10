@@ -402,7 +402,7 @@ function sendWS(obj) {
 
 // ========= WebRTC Peer =========
 function createPeerAsHost() {
-  state.peer = new RTCPeerConnection({ iceServers: [{ urls: 'turn:ws.anyuka.cn:3478' }, { urls: 'turn:ws.anyuka.cn:3478?transport=tcp' }, { urls: 'stun:stun.miwifi.com:3478' }, { urls: 'stun:stun.chat.bilibili.com:3478' }, { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] });
+  state.peer = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.qq.com:3478' }, { urls: 'stun:stun.aliyun.com:3478' }, { urls: 'stun:stun.miwifi.com:3478' }, { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] });
   setupPeer();
   state.dc = state.peer.createDataChannel('file-transfer', { ordered: true });
   setupDataChannel();
@@ -412,7 +412,7 @@ function createPeerAsHost() {
 }
 
 function createPeerAsGuest() {
-  state.peer = new RTCPeerConnection({ iceServers: [{ urls: 'turn:ws.anyuka.cn:3478' }, { urls: 'turn:ws.anyuka.cn:3478?transport=tcp' }, { urls: 'stun:stun.miwifi.com:3478' }, { urls: 'stun:stun.chat.bilibili.com:3478' }, { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] });
+  state.peer = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.qq.com:3478' }, { urls: 'stun:stun.aliyun.com:3478' }, { urls: 'stun:stun.miwifi.com:3478' }, { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] });
   setupPeer();
   state.peer.ondatachannel = (e) => {
     state.dc = e.channel;
