@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Yuka Send 信令服务器
  * 只负责：生成房间码、管理房间、转发 SDP/ICE
  * 不转发任何文件数据（P2P 直传）
@@ -74,12 +74,16 @@ const server = http.createServer((req, res) => {
 
 const wss = new WebSocketServer({ server });
 
+let connId = 0;
 wss.on("connection", (ws) => {
+  const thisConnId = ++connId;
   let myCode = null, myRole = null;
+  console.log("[conn #" + thisConnId + "] new connection, total clients: " + (wss.clients.size));
 
   ws.on("message", (raw) => {
     let msg;
     try { msg = JSON.parse(raw.toString()); } catch { return; }
+    console.log("[conn #" + thisConnId + "] <<< " + msg.type + (myCode ? (" room=" + myCode) : "") + (msg.code ? (" joinCode=" + msg.code) : "") + (msg.sdp ? (" sdpType=" + msg.sdp.type) : "") + (msg.candidate ? (" iceCandidate") : ""));
 
     switch (msg.type) {
       case "CREATE": {
