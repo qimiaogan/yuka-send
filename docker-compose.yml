@@ -4,10 +4,11 @@
 
 # ===== 需要新增到 services 里的部分 =====
 
+version: "3.8"
+
+services:
   yuka-send:
-    build:
-      context: ../yuka-send
-      dockerfile: Dockerfile
+    build: .
     container_name: yuka-send
     restart: unless-stopped
     ports:
@@ -20,9 +21,6 @@
       interval: 30s
       timeout: 3s
       retries: 3
-    # 和 nginx 在同一个自定义网络里，这样 Nginx 容器能用服务名反代
-    networks:
-      - app
 
 # ===== 如果你的 nginx 服务已经在 app 网络里，就不用改 networks =====
 # 如果 nginx 不在 app 网络，需要给 nginx 加一行：
